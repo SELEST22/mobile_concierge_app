@@ -12,7 +12,7 @@ mobile-concierge/
 │   └── mobile/          Expo (React Native) app — one codebase for iOS + Android
 ├── packages/
 │   └── shared/          Shared TypeScript types + typed API client (source of truth)
-├── server/              Node + Express + SQLite API (auth, broadcast, concierge)
+├── server/              Node + Express + PostgreSQL API (auth, broadcast, concierge)
 └── package.json         npm workspaces root
 ```
 
@@ -49,13 +49,21 @@ the same package.
 
 ## 1. Run the backend
 
+The API uses **PostgreSQL**. The quickest local database is the bundled
+docker-compose file (or point `DATABASE_URL` at any Postgres you already have):
+
 ```bash
+docker compose up -d         # starts Postgres on localhost:5432 (from repo root)
+
 cd server
 npm install
-cp .env.example .env        # optional; sensible defaults otherwise
-npm run seed                # creates demo accounts + sample broadcasts
-npm run dev                 # API on http://localhost:4000
+cp .env.example .env         # DATABASE_URL already points at the compose DB
+npm run seed                 # creates schema + demo accounts + sample data
+npm run dev                  # API on http://localhost:4000
 ```
+
+> No Docker? Set `DATABASE_URL` to any Postgres instance (local install, Neon,
+> Supabase, etc.) and run the same `seed` / `dev` commands.
 
 Demo accounts (from the seed):
 
@@ -116,7 +124,7 @@ The app auto-detects the backend at your computer's LAN IP on port `4000`
 ## Tech choices
 
 - **Expo / React Native** — one codebase ships native iOS + Android and shares logic with a future React web app.
-- **Node + Express + SQLite (better-sqlite3)** — zero-config local DB; the data layer is isolated in `server/src/db.ts` so swapping to PostgreSQL later is a contained change.
+- **Node + Express + PostgreSQL (`pg`)** — production-grade DB; all access goes through the helpers in `server/src/db.ts`, and `initDb()` creates the schema on startup. Local dev uses the bundled docker-compose Postgres; deploys use any managed Postgres via `DATABASE_URL`.
 - **JWT + bcrypt + expo-secure-store** — standard, secure auth with the token encrypted at rest on device.
 
 ## Roadmap (next phases)

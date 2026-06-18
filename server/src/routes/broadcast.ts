@@ -12,7 +12,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { config } from '../config.js';
-import { db } from '../db.js';
+import { many, one, run } from '../db.js';
 import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { asyncHandler, parseBody } from '../lib/http.js';
 
@@ -40,19 +40,15 @@ broadcastRouter.post(
     const days = data.expiresInDays ?? config.broadcastDefaultDays;
 
     // The target event must exist before we send to its members.
-    const event = db.prepare('SELECT 1 FROM events WHERE id = ?').get(data.eventId);
+    const event = await one('SELECT 1 FROM events WHERE id = $1', [data.eventId]);
     if (!event) return res.status(404).json({ error: 'Target event not found' });
 
-    const info = db
-      .prepare(
-        `INSERT INTO broadcast_messages (title, message, type, event_id, expires_at, created_by)
-         VALUES (?, ?, ?, ?, datetime('now', ?), ?)`,
-      )
-      .run(data.title, data.message, data.type, data.eventId, `+${days} days`, req.user!.id);
-
-    const row = db
-      .prepare('SELECT * FROM broadcast_messages WHERE id = ?')
-      .get(info.lastInsertRowid);
+    const row = await one(
+      `INSERT INTO broadcast_messages (title, message, type, event_id, expires_at, created_by)
+       VALUES ($1, $2, $3, $4, now() + make_interval(days => $5), $6)
+       RETURNING *`,
+      [data.title, data.message, data.type, data.eventId, days, req.user!.id],
+    );
     res.status(201).json(row);
   }),
 );
@@ -60,9 +56,7 @@ broadcastRouter.post(
 broadcastRouter.get(
   '/',
   asyncHandler(async (_req, res) => {
-    const rows = db
-      .prepare('SELECT * FROM broadcast_messages ORDER BY created_at DESC')
-      .all();
+    const rows = await many('SELECT * FROM broadcast_messages ORDER BY created_at DESC');
     res.json(rows);
   }),
 );
@@ -70,10 +64,10 @@ broadcastRouter.get(
 broadcastRouter.delete(
   '/:id',
   asyncHandler(async (req, res) => {
-    const info = db
-      .prepare('DELETE FROM broadcast_messages WHERE id = ?')
-      .run(Number(req.params.id));
-    if (info.changes === 0) return res.status(404).json({ error: 'Broadcast not found' });
+    const changes = await run('DELETE FROM broadcast_messages WHERE id = $1', [
+      Number(req.params.id),
+    ]);
+    if (changes === 0) return res.status(404).json({ error: 'Broadcast not found' });
     res.json({ ok: true });
   }),
 );

@@ -1,0 +1,21 @@
+# Local PostgreSQL for development.
+#   docker compose up -d        # start the database
+#   docker compose down         # stop it (data is kept in the named volume)
+#   docker compose down -v      # stop and wipe the data
+#
+# Matches the default DATABASE_URL in server/.env.example.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: concierge
+      POSTGRES_PASSWORD: concierge
+      POSTGRES_DB: concierge
+    ports:
+      - '5432:5432'
+    volumes:
+      - concierge_pgdata:/var/lib/postgresql/data
+
+volumes:
+  concierge_pgdata:

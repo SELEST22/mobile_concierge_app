@@ -2,7 +2,7 @@
 import cors from 'cors';
 import express from 'express';
 import { config } from './config.js';
-import './db.js'; // side effect: open DB + create schema
+import { initDb } from './db.js';
 import { authRouter } from './routes/auth.js';
 import { broadcastRouter } from './routes/broadcast.js';
 import { conciergeRouter } from './routes/concierge.js';
@@ -32,6 +32,14 @@ app.use(
   },
 );
 
-app.listen(config.port, () => {
-  console.log(`Mobile Concierge API listening on http://localhost:${config.port}`);
-});
+// Create the schema, then start listening.
+initDb()
+  .then(() => {
+    app.listen(config.port, () => {
+      console.log(`Mobile Concierge API listening on http://localhost:${config.port}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to initialise the database:', err);
+    process.exit(1);
+  });
