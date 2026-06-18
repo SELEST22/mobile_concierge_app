@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config.js';
-import { db, type Role } from '../db.js';
+import { one, type Role } from '../db.js';
 
 export interface AuthUser {
   id: number;
@@ -37,7 +37,7 @@ export function signToken(user: AuthUser): string {
 }
 
 /** Rejects the request unless a valid bearer token is present. */
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
+export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Missing or malformed Authorization header' });
@@ -45,7 +45,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   try {
     const payload = jwt.verify(header.slice(7), config.jwtSecret) as AuthUser;
     // Confirm the user still exists (token could outlive the account).
-    const exists = db.prepare('SELECT 1 FROM users WHERE id = ?').get(payload.id);
+    const exists = await one('SELECT 1 FROM users WHERE id = $1', [payload.id]);
     if (!exists) return res.status(401).json({ error: 'User no longer exists' });
     req.user = { id: payload.id, email: payload.email, role: payload.role };
     next();

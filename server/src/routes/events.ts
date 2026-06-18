@@ -12,7 +12,7 @@
 import { randomBytes } from 'node:crypto';
 import { Router } from 'express';
 import { z } from 'zod';
-import { db } from '../db.js';
+import { many, one, run, UNIQUE_VIOLATION } from '../db.js';
 import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { asyncHandler, parseBody } from '../lib/http.js';
 
@@ -49,13 +49,14 @@ eventsRouter.post(
     if (!data) return;
 
     const code = data.code.replace(QR_PREFIX, '').trim().toUpperCase();
-    const event: any = db.prepare('SELECT * FROM events WHERE code = ?').get(code);
+    const event: any = await one('SELECT * FROM events WHERE code = $1', [code]);
     if (!event) return res.status(404).json({ error: 'That event code is not valid.' });
 
-    db.prepare(
-      `INSERT INTO event_members (event_id, user_id) VALUES (?, ?)
-       ON CONFLICT(event_id, user_id) DO NOTHING`,
-    ).run(event.id, req.user!.id);
+    await run(
+      `INSERT INTO event_members (event_id, user_id) VALUES ($1, $2)
+       ON CONFLICT (event_id, user_id) DO NOTHING`,
+      [event.id, req.user!.id],
+    );
 
     res.status(201).json({ ...withQr(event), joined: true });
   }),
@@ -64,16 +65,16 @@ eventsRouter.post(
 eventsRouter.get(
   '/mine',
   asyncHandler(async (req, res) => {
-    const rows = db
-      .prepare(
+    const rows = (
+      await many(
         `SELECT e.*, m.joined_at
            FROM events e
            JOIN event_members m ON m.event_id = e.id
-          WHERE m.user_id = ?
+          WHERE m.user_id = $1
           ORDER BY m.joined_at DESC`,
+        [req.user!.id],
       )
-      .all(req.user!.id)
-      .map(withQr);
+    ).map(withQr);
     res.json(rows);
   }),
 );
@@ -99,23 +100,22 @@ eventsRouter.post(
     for (let attempt = 0; attempt < 5; attempt++) {
       const code = generateCode();
       try {
-        const info = db
-          .prepare(
-            `INSERT INTO events (name, code, event_date, location, description, created_by)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-          )
-          .run(
+        row = await one(
+          `INSERT INTO events (name, code, event_date, location, description, created_by)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           RETURNING *`,
+          [
             data.name,
             code,
             data.eventDate ?? null,
             data.location ?? null,
             data.description ?? null,
             req.user!.id,
-          );
-        row = db.prepare('SELECT * FROM events WHERE id = ?').get(info.lastInsertRowid);
+          ],
+        );
         break;
       } catch (err: any) {
-        if (!String(err.message).includes('UNIQUE')) throw err;
+        if (err?.code !== UNIQUE_VIOLATION) throw err;
       }
     }
     if (!row) return res.status(500).json({ error: 'Could not allocate an event code' });
@@ -127,16 +127,15 @@ eventsRouter.get(
   '/',
   requireAdmin,
   asyncHandler(async (_req, res) => {
-    const rows = db
-      .prepare(
-        `SELECT e.*, COUNT(m.id) AS member_count
+    const rows = (
+      await many(
+        `SELECT e.*, COUNT(m.id)::int AS member_count
            FROM events e
            LEFT JOIN event_members m ON m.event_id = e.id
           GROUP BY e.id
           ORDER BY e.created_at DESC`,
       )
-      .all()
-      .map(withQr);
+    ).map(withQr);
     res.json(rows);
   }),
 );

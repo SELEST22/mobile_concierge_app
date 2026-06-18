@@ -1,7 +1,7 @@
 /** Auth routes: register, login, and "who am I". */
 import { Router } from 'express';
 import { z } from 'zod';
-import { db } from '../db.js';
+import { one } from '../db.js';
 import {
   hashPassword,
   requireAuth,
@@ -58,18 +58,17 @@ authRouter.post(
         .json({ error: 'Please enter the venue, business, or property you represent.' });
     }
 
-    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(data.email);
+    const existing = await one('SELECT id FROM users WHERE email = $1', [data.email]);
     if (existing) return res.status(409).json({ error: 'Email already registered' });
 
     const hash = await hashPassword(data.password);
-    const info = db
-      .prepare(
-        `INSERT INTO users (name, email, password, role, organization, notifications_consent)
-         VALUES (?, ?, ?, ?, ?, 1)`,
-      )
-      .run(data.name, data.email, hash, data.role, data.role === 'admin' ? data.organization : null);
+    const row = await one(
+      `INSERT INTO users (name, email, password, role, organization, notifications_consent)
+       VALUES ($1, $2, $3, $4, $5, true)
+       RETURNING *`,
+      [data.name, data.email, hash, data.role, data.role === 'admin' ? data.organization : null],
+    );
 
-    const row = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
     const user = publicUser(row);
     const token = signToken({ id: user.id, email: user.email, role: user.role } as AuthUser);
     res.status(201).json({ token, user });
@@ -82,7 +81,7 @@ authRouter.post(
     const data = parseBody(loginSchema, req, res);
     if (!data) return;
 
-    const row: any = db.prepare('SELECT * FROM users WHERE email = ?').get(data.email);
+    const row: any = await one('SELECT * FROM users WHERE email = $1', [data.email]);
     // Same response whether the email or the password is wrong (no user enumeration).
     if (!row || !(await verifyPassword(data.password, row.password))) {
       return res.status(401).json({ error: 'Invalid email or password' });
@@ -98,7 +97,7 @@ authRouter.get(
   '/me',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const row = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user!.id);
+    const row = await one('SELECT * FROM users WHERE id = $1', [req.user!.id]);
     res.json(publicUser(row));
   }),
 );

@@ -20,8 +20,8 @@ interface Props {
 }
 
 function formatDate(iso: string): string {
-  // SQLite returns "YYYY-MM-DD HH:MM:SS" (UTC); make it a friendly local date.
-  const d = new Date(iso.replace(' ', 'T') + 'Z');
+  // The API returns ISO 8601 timestamps (e.g. "2026-06-18T04:22:23.215Z").
+  const d = new Date(iso);
   return d.toLocaleString(undefined, {
     month: 'short',
     day: 'numeric',
