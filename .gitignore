@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+
+# server
+server/data/
+server/.env
+
+# expo / react native
+apps/mobile/.expo/
+apps/mobile/dist/
+apps/mobile/web-build/
+*.orig.*
+
+# native
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# logs & os
+*.log
+.DS_Store
+
+# editor
+.idea/
+.vscode/

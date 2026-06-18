@@ -1,0 +1,16 @@
+{
+  "name": "mobile-concierge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mobile Concierge Service — SELEST Security. Monorepo: backend API, shared types, and the Expo (iOS + Android) app.",
+  "workspaces": [
+    "packages/*",
+    "server"
+  ],
+  "scripts": {
+    "server": "npm --workspace @concierge/server run dev",
+    "seed": "npm --workspace @concierge/server run seed",
+    "mobile": "npm --prefix apps/mobile run start"
+  },
+  "license": "UNLICENSED"
+}

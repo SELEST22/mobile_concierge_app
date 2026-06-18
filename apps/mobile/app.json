@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Mobile Concierge",
+    "slug": "mobile-concierge",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "concierge",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0B1F3A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.selest.concierge"
+    },
+    "android": {
+      "package": "com.selest.concierge",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B1F3A"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
