@@ -16,6 +16,9 @@ export function EventQrScreen({ route }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.name}>{event.name}</Text>
+      {!!event.event_date && <Text style={styles.meta}>🗓️  {event.event_date}</Text>}
+      {!!event.location && <Text style={styles.meta}>📍  {event.location}</Text>}
+      {!!event.description && <Text style={styles.description}>{event.description}</Text>}
       <Text style={styles.hint}>Have guests scan this code to join the event.</Text>
 
       <View style={styles.qrCard}>
@@ -31,7 +34,9 @@ export function EventQrScreen({ route }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, alignItems: 'center', padding: spacing(3) },
   name: { fontSize: 24, fontWeight: '800', color: colors.navy, marginTop: spacing(2), textAlign: 'center' },
-  hint: { fontSize: 14, color: colors.textMuted, marginTop: 6, marginBottom: spacing(3), textAlign: 'center' },
+  meta: { fontSize: 15, color: colors.text, marginTop: 4, textAlign: 'center' },
+  description: { fontSize: 14, color: colors.textMuted, marginTop: spacing(1), textAlign: 'center' },
+  hint: { fontSize: 14, color: colors.textMuted, marginTop: spacing(2), marginBottom: spacing(3), textAlign: 'center' },
   qrCard: {
     backgroundColor: colors.white,
     padding: spacing(3),

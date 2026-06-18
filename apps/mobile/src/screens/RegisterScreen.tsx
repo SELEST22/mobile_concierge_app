@@ -23,6 +23,9 @@ export function RegisterScreen({ navigation }: Props) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // Account type: admins name the venue / business / property they represent.
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [organization, setOrganization] = useState('');
   // CEO requirement: users must agree to receive mass-notification pop-ups
   // when they create an account. Sign-up is blocked until this is checked.
   const [consent, setConsent] = useState(false);
@@ -35,6 +38,10 @@ export function RegisterScreen({ navigation }: Props) {
       setError('You must agree to receive notifications to create an account.');
       return;
     }
+    if (isAdmin && !organization.trim()) {
+      setError('Enter the venue, business, or property you represent.');
+      return;
+    }
     setLoading(true);
     try {
       await register({
@@ -42,6 +49,8 @@ export function RegisterScreen({ navigation }: Props) {
         email: email.trim(),
         password,
         notificationsConsent: true,
+        role: isAdmin ? 'admin' : 'user',
+        organization: isAdmin ? organization.trim() : undefined,
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Registration failed');
@@ -75,6 +84,31 @@ export function RegisterScreen({ navigation }: Props) {
           placeholder="At least 6 characters"
         />
 
+        <Text style={styles.fieldLabel}>Account type</Text>
+        <View style={styles.typeRow}>
+          <Pressable
+            onPress={() => setIsAdmin(false)}
+            style={[styles.typeBtn, !isAdmin && styles.typeBtnActive]}
+          >
+            <Text style={[styles.typeBtnText, !isAdmin && styles.typeBtnTextActive]}>Guest</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setIsAdmin(true)}
+            style={[styles.typeBtn, isAdmin && styles.typeBtnActive]}
+          >
+            <Text style={[styles.typeBtnText, isAdmin && styles.typeBtnTextActive]}>Admin</Text>
+          </Pressable>
+        </View>
+
+        {isAdmin && (
+          <Field
+            label="Venue / business / property you represent"
+            value={organization}
+            onChangeText={setOrganization}
+            placeholder="e.g. The Grand Rooftop"
+          />
+        )}
+
         <Pressable
           style={styles.consentRow}
           onPress={() => setConsent((c) => !c)}
@@ -104,6 +138,20 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing(3), paddingTop: spacing(6) },
   title: { fontSize: 26, fontWeight: '800', color: colors.navy, marginBottom: spacing(3) },
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: colors.text, marginBottom: 6 },
+  typeRow: { flexDirection: 'row', gap: spacing(1.5), marginBottom: spacing(2) },
+  typeBtn: {
+    flex: 1,
+    paddingVertical: spacing(1.5),
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+  },
+  typeBtnActive: { borderColor: colors.navy, backgroundColor: colors.navy },
+  typeBtnText: { fontWeight: '700', fontSize: 15, color: colors.textMuted },
+  typeBtnTextActive: { color: colors.white },
   consentRow: {
     flexDirection: 'row',
     gap: spacing(1.5),

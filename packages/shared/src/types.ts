@@ -13,6 +13,8 @@ export interface User {
   name: string;
   email: string;
   role: Role;
+  /** For admins: the venue / business / property they represent. */
+  organization: string | null;
   /** User agreed to receive mass-notification pop-ups at sign-up. */
   notifications_consent: boolean;
   created_at: string;
@@ -38,6 +40,9 @@ export interface Event {
   id: number;
   name: string;
   code: string;
+  /** When the event happens (free text, e.g. "Sat 12 Jul, 8:00 PM"). */
+  event_date: string | null;
+  location: string | null;
   description: string | null;
   created_at: string;
   created_by: number;
@@ -85,6 +90,10 @@ export interface RegisterPayload {
   password: string;
   /** Must be true — users must agree to receive notifications to sign up. */
   notificationsConsent: true;
+  /** Account type. Defaults to 'user'. */
+  role?: Role;
+  /** For admins: the venue / business / property they represent (required). */
+  organization?: string;
 }
 
 export interface LoginPayload {
@@ -104,6 +113,8 @@ export interface CreateBroadcastPayload {
 
 export interface CreateEventPayload {
   name: string;
+  eventDate?: string;
+  location?: string;
   description?: string;
 }
 
