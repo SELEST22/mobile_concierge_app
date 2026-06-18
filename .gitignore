@@ -25,3 +25,6 @@ apps/mobile/web-build/
 # editor
 .idea/
 .vscode/
+
+# genral env
+.env
