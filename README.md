@@ -1,4 +1,4 @@
-# Mobile Concierge Service — SELEST Security
+# Selest Security — Mobile Concierge Service
 
 A cross-platform concierge & security app for iOS and Android, plus the backend
 that powers it. This first phase delivers the **foundation** (project structure,
