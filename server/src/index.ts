@@ -6,6 +6,7 @@ import './db.js'; // side effect: open DB + create schema
 import { authRouter } from './routes/auth.js';
 import { broadcastRouter } from './routes/broadcast.js';
 import { conciergeRouter } from './routes/concierge.js';
+import { eventsRouter } from './routes/events.js';
 import { messagesRouter } from './routes/messages.js';
 
 const app = express();
@@ -19,6 +20,7 @@ app.use('/auth', authRouter);
 app.use('/broadcast', broadcastRouter);
 app.use('/user/messages', messagesRouter);
 app.use('/concierge', conciergeRouter);
+app.use('/events', eventsRouter);
 
 app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
 

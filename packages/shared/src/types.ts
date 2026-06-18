@@ -26,9 +26,27 @@ export interface BroadcastMessage {
   title: string;
   message: string;
   type: BroadcastType;
+  /** NULL = sent to all users; otherwise only members of this event. */
+  event_id: number | null;
   created_at: string;
   expires_at: string;
   created_by: number;
+}
+
+/** An event users join by scanning a QR code. */
+export interface Event {
+  id: number;
+  name: string;
+  code: string;
+  description: string | null;
+  created_at: string;
+  created_by: number;
+  /** Full payload encoded in the QR, e.g. "SELEST-EVENT:ABCD2345". */
+  qr_payload: string;
+  /** Present in the admin listing. */
+  member_count?: number;
+  /** Present in the user's "my events" listing. */
+  joined_at?: string;
 }
 
 /**
@@ -80,6 +98,13 @@ export interface CreateBroadcastPayload {
   type: BroadcastType;
   /** Days until the message auto-hides. Defaults to 30 on the server. */
   expiresInDays?: number;
+  /** Omit/null = all users; set = only members of that event. */
+  eventId?: number | null;
+}
+
+export interface CreateEventPayload {
+  name: string;
+  description?: string;
 }
 
 export interface CreateConciergePayload {

@@ -8,6 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { EventsStack } from './EventsStack';
 import { AdminBroadcastScreen } from '../screens/AdminBroadcastScreen';
 import { ArchivedScreen } from '../screens/ArchivedScreen';
 import { ConciergeScreen } from '../screens/ConciergeScreen';
@@ -28,6 +29,7 @@ const Tabs = createBottomTabNavigator();
 const screenIcons: Record<string, keyof typeof Ionicons.glyphMap> = {
   Alerts: 'notifications',
   Archive: 'archive',
+  Events: 'qr-code',
   Concierge: 'sparkles',
   Broadcast: 'megaphone',
   Profile: 'person',
@@ -50,6 +52,11 @@ function MainTabs() {
     >
       <Tabs.Screen name="Alerts" component={NotificationsScreen} options={{ title: 'Notifications' }} />
       <Tabs.Screen name="Archive" component={ArchivedScreen} options={{ title: 'Archived' }} />
+      <Tabs.Screen
+        name="Events"
+        component={EventsStack}
+        options={{ headerShown: false }}
+      />
       <Tabs.Screen name="Concierge" component={ConciergeScreen} />
       {isAdmin && (
         <Tabs.Screen name="Broadcast" component={AdminBroadcastScreen} options={{ title: 'Broadcast' }} />

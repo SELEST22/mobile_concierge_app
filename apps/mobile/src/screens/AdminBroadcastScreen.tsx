@@ -5,7 +5,7 @@
  * Emergency vs General is chosen with a clear, color-coded toggle (emergency =
  * red / high priority).
  */
-import type { BroadcastMessage, BroadcastType } from '@concierge/shared';
+import type { BroadcastMessage, BroadcastType, Event } from '@concierge/shared';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import {
@@ -28,12 +28,16 @@ export function AdminBroadcastScreen() {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [type, setType] = useState<BroadcastType>('general');
+  // null = send to everyone; otherwise target one event's members.
+  const [targetEventId, setTargetEventId] = useState<number | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState<BroadcastMessage[]>([]);
 
   const loadSent = useCallback(async () => {
     try {
       setSent(await api.listBroadcasts());
+      setEvents(await api.listEvents());
     } catch {
       /* non-fatal for the composer */
     }
@@ -53,12 +57,21 @@ export function AdminBroadcastScreen() {
     const send = async () => {
       setSending(true);
       try {
-        await api.createBroadcast({ title: title.trim(), message: message.trim(), type });
+        await api.createBroadcast({
+          title: title.trim(),
+          message: message.trim(),
+          type,
+          eventId: targetEventId,
+        });
         setTitle('');
         setMessage('');
         setType('general');
+        setTargetEventId(null);
         await loadSent();
-        Alert.alert('Sent', 'Your message was broadcast to all users.');
+        const where = targetEventId
+          ? `members of "${events.find((e) => e.id === targetEventId)?.name ?? 'the event'}"`
+          : 'all users';
+        Alert.alert('Sent', `Your message was broadcast to ${where}.`);
       } catch (e) {
         Alert.alert('Send failed', e instanceof Error ? e.message : 'Network error');
       } finally {
@@ -114,6 +127,29 @@ export function AdminBroadcastScreen() {
           />
         </View>
 
+        <Text style={styles.audienceLabel}>Audience</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.audienceRow}>
+          <Pressable
+            onPress={() => setTargetEventId(null)}
+            style={[styles.audChip, targetEventId === null && styles.audChipActive]}
+          >
+            <Text style={[styles.audChipText, targetEventId === null && styles.audChipTextActive]}>
+              All users
+            </Text>
+          </Pressable>
+          {events.map((e) => (
+            <Pressable
+              key={e.id}
+              onPress={() => setTargetEventId(e.id)}
+              style={[styles.audChip, targetEventId === e.id && styles.audChipActive]}
+            >
+              <Text style={[styles.audChipText, targetEventId === e.id && styles.audChipTextActive]}>
+                {e.name}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+
         <Field label="Title" value={title} onChangeText={setTitle} placeholder="e.g. Pool closing soon" />
         <Field
           label="Message"
@@ -126,7 +162,13 @@ export function AdminBroadcastScreen() {
         />
 
         <Button
-          title={type === 'emergency' ? 'Send emergency alert' : 'Send to all users'}
+          title={
+            type === 'emergency'
+              ? 'Send emergency alert'
+              : targetEventId
+                ? 'Send to event members'
+                : 'Send to all users'
+          }
           onPress={onSend}
           loading={sending}
           variant={type === 'emergency' ? 'danger' : 'primary'}
@@ -182,6 +224,20 @@ const styles = StyleSheet.create({
   typeRow: { flexDirection: 'row', gap: spacing(1.5), marginBottom: spacing(2) },
   typeBtn: { flex: 1, paddingVertical: spacing(1.5), borderRadius: radius.md, borderWidth: 1.5, alignItems: 'center' },
   typeBtnText: { fontWeight: '700', fontSize: 15 },
+  audienceLabel: { fontSize: 13, fontWeight: '600', color: colors.text, marginBottom: 6 },
+  audienceRow: { marginBottom: spacing(2) },
+  audChip: {
+    paddingHorizontal: spacing(1.5),
+    paddingVertical: 8,
+    borderRadius: radius.lg,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginRight: spacing(1),
+  },
+  audChipActive: { backgroundColor: colors.navy, borderColor: colors.navy },
+  audChipText: { color: colors.textMuted, fontWeight: '600' },
+  audChipTextActive: { color: colors.white },
   multiline: { minHeight: 110, textAlignVertical: 'top' },
   muted: { color: colors.textMuted },
   sentRow: {

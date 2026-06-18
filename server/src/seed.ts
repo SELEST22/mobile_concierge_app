@@ -59,9 +59,20 @@ async function main() {
     );
   }
 
+  // Demo event with a fixed, easy-to-type code so QR join is testable without
+  // a printed code. (Real events get a random code from the admin screen.)
+  const DEMO_EVENT_CODE = 'WELCOME1';
+  const hasEvent = db.prepare('SELECT 1 FROM events WHERE code = ?').get(DEMO_EVENT_CODE);
+  if (!hasEvent) {
+    db.prepare(
+      'INSERT INTO events (name, code, description, created_by) VALUES (?, ?, ?, ?)',
+    ).run('Launch Night', DEMO_EVENT_CODE, 'Demo event for QR join testing.', adminId);
+  }
+
   console.log('Seed complete.');
   console.log(`  Admin: ${DEMO.admin.email} / ${DEMO.admin.password}`);
   console.log(`  Guest: ${DEMO.user.email} / ${DEMO.user.password}`);
+  console.log(`  Demo event join code: ${DEMO_EVENT_CODE} (QR: SELEST-EVENT:${DEMO_EVENT_CODE})`);
 }
 
 main().then(() => process.exit(0));

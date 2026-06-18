@@ -10,6 +10,8 @@ import type {
   ConciergeRequest,
   CreateBroadcastPayload,
   CreateConciergePayload,
+  CreateEventPayload,
+  Event,
   LoginPayload,
   RegisterPayload,
   User,
@@ -116,6 +118,33 @@ export class ApiClient {
     return this.request<{ ok: true }>(`/user/messages/read-all`, {
       method: 'PATCH',
     });
+  }
+
+  // ---- events (QR join) ----------------------------------------------------
+  /** Admin: create an event (returns its code + QR payload). */
+  createEvent(payload: CreateEventPayload) {
+    return this.request<Event>('/events', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  /** Admin: list all events with member counts. */
+  listEvents() {
+    return this.request<Event[]>('/events');
+  }
+
+  /** User: join an event from a scanned code or QR payload. */
+  joinEvent(code: string) {
+    return this.request<Event & { joined: true }>('/events/join', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  }
+
+  /** User: the events the current user has joined. */
+  listMyEvents() {
+    return this.request<Event[]>('/events/mine');
   }
 
   // ---- concierge (stub for next pass) --------------------------------------

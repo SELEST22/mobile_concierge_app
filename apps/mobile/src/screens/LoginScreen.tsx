@@ -41,7 +41,8 @@ export function LoginScreen({ navigation }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.brand}>Mobile Concierge</Text>
+        <Text style={styles.brand}>Selest Security</Text>
+        <Text style={styles.tagline}>Mobile Concierge Service</Text>
         <Text style={styles.subtitle}>Sign in to reach your concierge & security team.</Text>
 
         <Field
@@ -78,6 +79,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing(3), paddingTop: spacing(8) },
   brand: { fontSize: 30, fontWeight: '800', color: colors.navy },
+  tagline: { fontSize: 16, fontWeight: '600', color: colors.accent, marginTop: 2 },
   subtitle: { fontSize: 15, color: colors.textMuted, marginTop: 6, marginBottom: spacing(3) },
   error: { color: colors.emergency, marginBottom: spacing(1.5), fontWeight: '600' },
 });

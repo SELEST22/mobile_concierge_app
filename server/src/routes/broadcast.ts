@@ -23,6 +23,8 @@ const createSchema = z.object({
   message: z.string().trim().min(1).max(4000),
   type: z.enum(['emergency', 'general']).default('general'),
   expiresInDays: z.number().int().positive().max(365).optional(),
+  // Omit/null = sent to everyone; set = only members of that event see it.
+  eventId: z.number().int().positive().nullable().optional(),
 });
 
 // Every route here requires an authenticated admin.
@@ -35,12 +37,19 @@ broadcastRouter.post(
     if (!data) return;
 
     const days = data.expiresInDays ?? config.broadcastDefaultDays;
+
+    // If targeting an event, make sure it exists before sending.
+    if (data.eventId != null) {
+      const event = db.prepare('SELECT 1 FROM events WHERE id = ?').get(data.eventId);
+      if (!event) return res.status(404).json({ error: 'Target event not found' });
+    }
+
     const info = db
       .prepare(
-        `INSERT INTO broadcast_messages (title, message, type, expires_at, created_by)
-         VALUES (?, ?, ?, datetime('now', ?), ?)`,
+        `INSERT INTO broadcast_messages (title, message, type, event_id, expires_at, created_by)
+         VALUES (?, ?, ?, ?, datetime('now', ?), ?)`,
       )
-      .run(data.title, data.message, data.type, `+${days} days`, req.user!.id);
+      .run(data.title, data.message, data.type, data.eventId ?? null, `+${days} days`, req.user!.id);
 
     const row = db
       .prepare('SELECT * FROM broadcast_messages WHERE id = ?')

@@ -29,6 +29,25 @@ db.exec(`
     created_at TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 
+  -- Events that users join by scanning a QR code.
+  CREATE TABLE IF NOT EXISTS events (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT    NOT NULL,
+    code       TEXT    NOT NULL UNIQUE,          -- random join code encoded in the QR
+    description TEXT,
+    created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
+  );
+
+  -- Which users have joined which events.
+  CREATE TABLE IF NOT EXISTS event_members (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id  INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    joined_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (event_id, user_id)
+  );
+
   -- Mass-communication / broadcast messages authored by admins.
   CREATE TABLE IF NOT EXISTS broadcast_messages (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,6 +55,8 @@ db.exec(`
     message    TEXT    NOT NULL,
     type       TEXT    NOT NULL DEFAULT 'general'
                        CHECK (type IN ('emergency', 'general')),
+    -- NULL = sent to everyone; otherwise only members of this event see it.
+    event_id   INTEGER REFERENCES events(id) ON DELETE CASCADE,
     created_at TEXT    NOT NULL DEFAULT (datetime('now')),
     expires_at TEXT    NOT NULL,                 -- auto-hidden after this time
     created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
@@ -69,6 +90,7 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_broadcast_expires ON broadcast_messages(expires_at);
   CREATE INDEX IF NOT EXISTS idx_status_user ON user_message_status(user_id);
+  CREATE INDEX IF NOT EXISTS idx_event_members_user ON event_members(user_id);
 `);
 
 // --- lightweight migrations -------------------------------------------------
@@ -83,5 +105,7 @@ function ensureColumn(table: string, column: string, ddl: string) {
 
 ensureColumn('users', 'notifications_consent', 'notifications_consent INTEGER NOT NULL DEFAULT 1');
 ensureColumn('user_message_status', 'is_deleted', 'is_deleted INTEGER NOT NULL DEFAULT 0');
+// event_id targets a broadcast at one event's members (NULL = everyone).
+ensureColumn('broadcast_messages', 'event_id', 'event_id INTEGER REFERENCES events(id) ON DELETE CASCADE');
 
 export type Role = 'admin' | 'user';

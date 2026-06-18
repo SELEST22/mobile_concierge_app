@@ -1,4 +1,4 @@
-# Mobile Concierge Service — SELEST Security
+# Selest Security — Mobile Concierge Service
 
 A cross-platform concierge & security app for iOS and Android, plus the backend
 that powers it. This first phase delivers the **foundation** (project structure,
@@ -31,10 +31,15 @@ the same package.
 - **Consent**: users must agree to receive notification pop-ups when creating an account.
 - Extras: filter (All / Emergency / General), mark-as-read, mark-all-read, admin delete of any broadcast.
 
+**Events (QR join)**
+- Admins create an event in-app; the app generates a unique **QR code** for it (shown full-screen to print/display).
+- Users **scan the QR** (camera) — or type the code — to **join** an event.
+- Admins can **target a broadcast at one event**: only members of that event receive it (everyone else doesn't). Un-targeted broadcasts still go to all users.
+
 **Foundation**
 - Secure JWT auth (passwords hashed with bcrypt; token stored in the device keychain via `expo-secure-store`).
 - Role-based access (admin vs guest); admin-only broadcast tab and endpoints.
-- A basic **Concierge / Security request** flow (raise a request, see its status) — scaffolding for the next phase (realtime chat, QR).
+- A basic **Concierge / Security request** flow (raise a request, see its status) — scaffolding for the next phase (realtime chat).
 
 ## Prerequisites
 
@@ -57,6 +62,9 @@ Demo accounts (from the seed):
 |-------|------------------------|------------|
 | Admin | `admin@concierge.dev`  | `admin123` |
 | Guest | `guest@concierge.dev`  | `guest123` |
+
+The seed also creates a demo event with the join code **`WELCOME1`** (QR payload
+`SELEST-EVENT:WELCOME1`) so you can test the join flow without a printed code.
 
 ## 2. Run the mobile app
 
@@ -91,6 +99,10 @@ The app auto-detects the backend at your computer's LAN IP on port `4000`
 | DELETE   | `/user/messages/:id`              | user  | Permanently delete (per user)            |
 | POST     | `/concierge`                      | user  | Raise a concierge/security request       |
 | GET      | `/concierge`                      | user  | List my requests                         |
+| POST     | `/events`                         | admin | Create an event (returns code + QR)      |
+| GET      | `/events`                         | admin | List events with member counts           |
+| POST     | `/events/join`                    | user  | Join an event from a scanned code        |
+| GET      | `/events/mine`                    | user  | Events the current user has joined        |
 
 ## Data model
 
@@ -108,6 +120,5 @@ The app auto-detects the backend at your computer's LAN IP on port `4000`
 ## Roadmap (next phases)
 
 - Concierge realtime chat + admin handling queue
-- QR code interaction system
 - Push notifications (FCM/APNs) and emergency sound/vibration
 - React web app reusing `@concierge/shared`
