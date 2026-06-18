@@ -98,8 +98,8 @@ export interface CreateBroadcastPayload {
   type: BroadcastType;
   /** Days until the message auto-hides. Defaults to 30 on the server. */
   expiresInDays?: number;
-  /** Omit/null = all users; set = only members of that event. */
-  eventId?: number | null;
+  /** Required: broadcasts are event-scoped (only that event's members see it). */
+  eventId: number;
 }
 
 export interface CreateEventPayload {

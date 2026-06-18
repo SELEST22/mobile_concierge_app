@@ -54,10 +54,9 @@ messagesRouter.get(
            LEFT JOIN user_message_status s
              ON s.message_id = b.id AND s.user_id = ?
           WHERE COALESCE(s.is_deleted, 0) = 0
-            -- Global broadcasts (event_id IS NULL) reach everyone; event
-            -- broadcasts reach only users who joined that event.
-            AND (b.event_id IS NULL
-                 OR b.event_id IN (SELECT event_id FROM event_members WHERE user_id = ?))
+            -- Broadcasts are event-scoped: a user only sees messages for the
+            -- events they have joined. There is no global / all-users send.
+            AND b.event_id IN (SELECT event_id FROM event_members WHERE user_id = ?)
             AND (${where})
           ORDER BY CASE b.type WHEN 'emergency' THEN 0 ELSE 1 END,
                    b.created_at DESC`,

@@ -34,19 +34,40 @@ async function upsertUser(u: { name: string; email: string; password: string }, 
 
 async function main() {
   const adminId = await upsertUser(DEMO.admin, 'admin');
-  await upsertUser(DEMO.user, 'user');
+  const guestId = await upsertUser(DEMO.user, 'user');
 
-  // Only seed broadcasts if there are none, to keep re-runs idempotent.
+  // Demo event with a fixed, easy-to-type code so QR join is testable without
+  // a printed code. (Real events get a random code from the admin screen.)
+  const DEMO_EVENT_CODE = 'WELCOME1';
+  let eventRow: any = db.prepare('SELECT id FROM events WHERE code = ?').get(DEMO_EVENT_CODE);
+  if (!eventRow) {
+    const info = db
+      .prepare('INSERT INTO events (name, code, description, created_by) VALUES (?, ?, ?, ?)')
+      .run('Launch Night', DEMO_EVENT_CODE, 'Demo event for QR join testing.', adminId);
+    eventRow = { id: info.lastInsertRowid };
+  }
+  const eventId = eventRow.id as number;
+
+  // Auto-join the demo guest so they immediately have an event whose
+  // notifications they can see (broadcasts are event-scoped).
+  db.prepare(
+    `INSERT INTO event_members (event_id, user_id) VALUES (?, ?)
+     ON CONFLICT(event_id, user_id) DO NOTHING`,
+  ).run(eventId, guestId);
+
+  // Only seed broadcasts if there are none, to keep re-runs idempotent. Every
+  // broadcast targets the demo event — there is no global send.
   const count: any = db.prepare('SELECT COUNT(*) AS n FROM broadcast_messages').get();
   if (count.n === 0) {
     const insert = db.prepare(
-      `INSERT INTO broadcast_messages (title, message, type, expires_at, created_by)
-       VALUES (?, ?, ?, datetime('now', ?), ?)`,
+      `INSERT INTO broadcast_messages (title, message, type, event_id, expires_at, created_by)
+       VALUES (?, ?, ?, ?, datetime('now', ?), ?)`,
     );
     insert.run(
-      'Welcome to Mobile Concierge',
+      'Welcome to Launch Night',
       'Your concierge and security team is one tap away. Tap any request to get started.',
       'general',
+      eventId,
       '+30 days',
       adminId,
     );
@@ -54,19 +75,10 @@ async function main() {
       'Fire drill at 3:00 PM',
       'A scheduled fire drill will take place today. Please follow staff instructions and use the nearest marked exit.',
       'emergency',
+      eventId,
       '+7 days',
       adminId,
     );
-  }
-
-  // Demo event with a fixed, easy-to-type code so QR join is testable without
-  // a printed code. (Real events get a random code from the admin screen.)
-  const DEMO_EVENT_CODE = 'WELCOME1';
-  const hasEvent = db.prepare('SELECT 1 FROM events WHERE code = ?').get(DEMO_EVENT_CODE);
-  if (!hasEvent) {
-    db.prepare(
-      'INSERT INTO events (name, code, description, created_by) VALUES (?, ?, ?, ?)',
-    ).run('Launch Night', DEMO_EVENT_CODE, 'Demo event for QR join testing.', adminId);
   }
 
   console.log('Seed complete.');

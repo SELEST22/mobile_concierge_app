@@ -54,24 +54,24 @@ export function AdminBroadcastScreen() {
       Alert.alert('Missing fields', 'Please enter both a title and a message.');
       return;
     }
+    // Broadcasts are event-scoped — an event must be chosen.
+    if (targetEventId == null) {
+      Alert.alert('Choose an event', 'Pick the event whose members should receive this message.');
+      return;
+    }
+    const eventId = targetEventId;
+    const eventName = events.find((e) => e.id === eventId)?.name ?? 'the event';
+
     const send = async () => {
       setSending(true);
       try {
-        await api.createBroadcast({
-          title: title.trim(),
-          message: message.trim(),
-          type,
-          eventId: targetEventId,
-        });
+        await api.createBroadcast({ title: title.trim(), message: message.trim(), type, eventId });
         setTitle('');
         setMessage('');
         setType('general');
         setTargetEventId(null);
         await loadSent();
-        const where = targetEventId
-          ? `members of "${events.find((e) => e.id === targetEventId)?.name ?? 'the event'}"`
-          : 'all users';
-        Alert.alert('Sent', `Your message was broadcast to ${where}.`);
+        Alert.alert('Sent', `Your message was sent to members of "${eventName}".`);
       } catch (e) {
         Alert.alert('Send failed', e instanceof Error ? e.message : 'Network error');
       } finally {
@@ -82,7 +82,7 @@ export function AdminBroadcastScreen() {
     if (type === 'emergency') {
       Alert.alert(
         'Send emergency alert?',
-        'This sends a high-priority pop-up to every user immediately.',
+        `This sends a high-priority pop-up to members of "${eventName}" immediately.`,
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Send alert', style: 'destructive', onPress: send },
@@ -127,28 +127,27 @@ export function AdminBroadcastScreen() {
           />
         </View>
 
-        <Text style={styles.audienceLabel}>Audience</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.audienceRow}>
-          <Pressable
-            onPress={() => setTargetEventId(null)}
-            style={[styles.audChip, targetEventId === null && styles.audChipActive]}
-          >
-            <Text style={[styles.audChipText, targetEventId === null && styles.audChipTextActive]}>
-              All users
-            </Text>
-          </Pressable>
-          {events.map((e) => (
-            <Pressable
-              key={e.id}
-              onPress={() => setTargetEventId(e.id)}
-              style={[styles.audChip, targetEventId === e.id && styles.audChipActive]}
-            >
-              <Text style={[styles.audChipText, targetEventId === e.id && styles.audChipTextActive]}>
-                {e.name}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+        <Text style={styles.audienceLabel}>Send to event</Text>
+        {events.length === 0 ? (
+          <Text style={[styles.muted, { marginBottom: spacing(2) }]}>
+            No events yet. Create one in the Events tab first — broadcasts are sent to an event's
+            members.
+          </Text>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.audienceRow}>
+            {events.map((e) => (
+              <Pressable
+                key={e.id}
+                onPress={() => setTargetEventId(e.id)}
+                style={[styles.audChip, targetEventId === e.id && styles.audChipActive]}
+              >
+                <Text style={[styles.audChipText, targetEventId === e.id && styles.audChipTextActive]}>
+                  {e.name}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        )}
 
         <Field label="Title" value={title} onChangeText={setTitle} placeholder="e.g. Pool closing soon" />
         <Field
@@ -162,15 +161,10 @@ export function AdminBroadcastScreen() {
         />
 
         <Button
-          title={
-            type === 'emergency'
-              ? 'Send emergency alert'
-              : targetEventId
-                ? 'Send to event members'
-                : 'Send to all users'
-          }
+          title={type === 'emergency' ? 'Send emergency alert' : 'Send to event members'}
           onPress={onSend}
           loading={sending}
+          disabled={targetEventId == null}
           variant={type === 'emergency' ? 'danger' : 'primary'}
         />
 
