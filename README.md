@@ -23,7 +23,7 @@ the same package.
 ## Features in this build
 
 **Mass communication (the broadcast system)**
-- Admins compose a broadcast (title, message, **Emergency** or **General**, optional expiry) and send it to every user in one action.
+- Admins compose a broadcast (title, message, **Emergency** or **General**, optional expiry) and send it to **the members of a chosen event**. Broadcasts are event-scoped — there is no all-users/global send; a user only receives notifications for events they've joined.
 - Users see broadcasts in a **Notifications** inbox; **emergency** messages sort to the top, are highlighted red, and pop up on arrival.
 - Messages stay visible for **30 days** by default, then auto-hide.
 - **Archive**: moves a message to a dedicated **Archived** section. Archived messages do **not** expire.
@@ -34,7 +34,7 @@ the same package.
 **Events (QR join)**
 - Admins create an event in-app; the app generates a unique **QR code** for it (shown full-screen to print/display).
 - Users **scan the QR** (camera) — or type the code — to **join** an event.
-- Admins can **target a broadcast at one event**: only members of that event receive it (everyone else doesn't). Un-targeted broadcasts still go to all users.
+- Joining an event is what unlocks its notifications: every broadcast is **targeted at one event**, so only that event's members receive it.
 
 **Foundation**
 - Secure JWT auth (passwords hashed with bcrypt; token stored in the device keychain via `expo-secure-store`).
@@ -88,7 +88,7 @@ The app auto-detects the backend at your computer's LAN IP on port `4000`
 | POST     | `/auth/register`                  | any   | Sign up (requires `notificationsConsent`)|
 | POST     | `/auth/login`                     | any   | Sign in                                  |
 | GET      | `/auth/me`                        | user  | Current user                             |
-| POST     | `/broadcast`                      | admin | Send a broadcast to all users            |
+| POST     | `/broadcast`                      | admin | Send a broadcast to an event's members (`eventId` required) |
 | GET      | `/broadcast`                      | admin | List all broadcasts                      |
 | DELETE   | `/broadcast/:id`                  | admin | Delete a broadcast                       |
 | GET      | `/user/messages`                  | user  | Active inbox                             |
@@ -107,7 +107,8 @@ The app auto-detects the backend at your computer's LAN IP on port `4000`
 ## Data model
 
 - **users** — `notifications_consent` records sign-up agreement.
-- **broadcast_messages** — one global row per broadcast (`expires_at` drives the 30-day window). Sending is O(1); there is no per-user fan-out, so there are never duplicates.
+- **broadcast_messages** — one row per broadcast, scoped to an event via `event_id` (`expires_at` drives the 30-day window). Sending is O(1); there is no per-user fan-out, so there are never duplicates — membership in `event_members` decides who sees it.
+- **events** / **event_members** — events users join by QR, and who has joined each.
 - **user_message_status** — each user's `read_at`, `is_archived`, `is_deleted` for a broadcast.
 - **concierge_requests** — basic request records.
 
