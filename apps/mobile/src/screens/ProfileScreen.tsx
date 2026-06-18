@@ -19,6 +19,7 @@ export function ProfileScreen() {
       {isAdmin && <Text style={styles.adminBadge}>ADMIN</Text>}
 
       <View style={styles.card}>
+        {!!user.organization && <Row icon="business" label="Represents" value={user.organization} />}
         <Row icon="notifications" label="Notification alerts" value={user.notifications_consent ? 'Enabled' : 'Off'} />
         <Row icon="shield-checkmark" label="Account type" value={isAdmin ? 'Administrator' : 'Guest'} />
       </View>

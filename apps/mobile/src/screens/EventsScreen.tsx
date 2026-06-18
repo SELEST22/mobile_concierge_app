@@ -28,6 +28,9 @@ export function EventsScreen() {
   const [myEvents, setMyEvents] = useState<Event[]>([]);
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [newName, setNewName] = useState('');
+  const [newDate, setNewDate] = useState('');
+  const [newLocation, setNewLocation] = useState('');
+  const [newDescription, setNewDescription] = useState('');
   const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
@@ -53,8 +56,16 @@ export function EventsScreen() {
     }
     setCreating(true);
     try {
-      const event = await api.createEvent({ name: newName.trim() });
+      const event = await api.createEvent({
+        name: newName.trim(),
+        eventDate: newDate.trim() || undefined,
+        location: newLocation.trim() || undefined,
+        description: newDescription.trim() || undefined,
+      });
       setNewName('');
+      setNewDate('');
+      setNewLocation('');
+      setNewDescription('');
       await load();
       navigation.navigate('EventQr', { event }); // show its QR right away
     } catch (e) {
@@ -80,6 +91,8 @@ export function EventsScreen() {
           <Ionicons name="ticket-outline" size={22} color={colors.primary} />
           <View style={{ flex: 1 }}>
             <Text style={styles.rowTitle}>{e.name}</Text>
+            {!!e.event_date && <Text style={styles.metaLine}>🗓️  {e.event_date}</Text>}
+            {!!e.location && <Text style={styles.metaLine}>📍  {e.location}</Text>}
             {!!e.description && <Text style={styles.muted}>{e.description}</Text>}
           </View>
           <View style={styles.joinedPill}>
@@ -92,6 +105,17 @@ export function EventsScreen() {
         <>
           <Text style={styles.section}>Create event (admin)</Text>
           <Field label="Event name" value={newName} onChangeText={setNewName} placeholder="e.g. Rooftop Party" />
+          <Field label="Date & time" value={newDate} onChangeText={setNewDate} placeholder="e.g. Sat 12 Jul, 8:00 PM" />
+          <Field label="Location" value={newLocation} onChangeText={setNewLocation} placeholder="e.g. The Grand Rooftop, Level 12" />
+          <Field
+            label="Description"
+            value={newDescription}
+            onChangeText={setNewDescription}
+            placeholder="What's happening at this event?"
+            multiline
+            numberOfLines={3}
+            style={styles.multiline}
+          />
           <Button title="Create & show QR" onPress={onCreate} loading={creating} />
 
           <Text style={styles.section}>All events</Text>
@@ -123,6 +147,8 @@ const styles = StyleSheet.create({
   content: { padding: spacing(2) },
   section: { fontSize: 18, fontWeight: '800', color: colors.navy, marginTop: spacing(3), marginBottom: spacing(1.5) },
   muted: { color: colors.textMuted, fontSize: 13 },
+  metaLine: { color: colors.text, fontSize: 13, marginTop: 2 },
+  multiline: { minHeight: 80, textAlignVertical: 'top' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

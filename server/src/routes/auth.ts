@@ -22,6 +22,10 @@ const registerSchema = z.object({
   notificationsConsent: z.literal(true, {
     errorMap: () => ({ message: 'You must agree to receive notifications to sign up.' }),
   }),
+  // Choose the account type at sign-up. Admins must name the venue / business /
+  // property they represent.
+  role: z.enum(['user', 'admin']).default('user'),
+  organization: z.string().trim().max(160).optional(),
 });
 
 const loginSchema = z.object({
@@ -35,6 +39,7 @@ function publicUser(row: any) {
     name: row.name,
     email: row.email,
     role: row.role,
+    organization: row.organization ?? null,
     notifications_consent: !!row.notifications_consent,
     created_at: row.created_at,
   };
@@ -46,15 +51,23 @@ authRouter.post(
     const data = parseBody(registerSchema, req, res);
     if (!data) return;
 
+    // Admins must tell us which venue / business / property they represent.
+    if (data.role === 'admin' && !data.organization) {
+      return res
+        .status(400)
+        .json({ error: 'Please enter the venue, business, or property you represent.' });
+    }
+
     const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(data.email);
     if (existing) return res.status(409).json({ error: 'Email already registered' });
 
     const hash = await hashPassword(data.password);
     const info = db
       .prepare(
-        'INSERT INTO users (name, email, password, role, notifications_consent) VALUES (?, ?, ?, ?, 1)',
+        `INSERT INTO users (name, email, password, role, organization, notifications_consent)
+         VALUES (?, ?, ?, ?, ?, 1)`,
       )
-      .run(data.name, data.email, hash, 'user');
+      .run(data.name, data.email, hash, data.role, data.role === 'admin' ? data.organization : null);
 
     const row = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
     const user = publicUser(row);

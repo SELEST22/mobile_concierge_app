@@ -24,6 +24,8 @@ db.exec(`
     password   TEXT    NOT NULL,                 -- bcrypt hash, never plaintext
     role       TEXT    NOT NULL DEFAULT 'user'   -- 'admin' | 'user'
                        CHECK (role IN ('admin', 'user')),
+    -- For admins: the venue / business / property they represent.
+    organization TEXT,
     -- User consented to receive mass-notification pop-ups at sign-up (required).
     notifications_consent INTEGER NOT NULL DEFAULT 1,
     created_at TEXT    NOT NULL DEFAULT (datetime('now'))
@@ -34,6 +36,8 @@ db.exec(`
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     name       TEXT    NOT NULL,
     code       TEXT    NOT NULL UNIQUE,          -- random join code encoded in the QR
+    event_date TEXT,                             -- when the event happens (free text)
+    location   TEXT,                             -- where it happens
     description TEXT,
     created_at TEXT    NOT NULL DEFAULT (datetime('now')),
     created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
@@ -104,8 +108,11 @@ function ensureColumn(table: string, column: string, ddl: string) {
 }
 
 ensureColumn('users', 'notifications_consent', 'notifications_consent INTEGER NOT NULL DEFAULT 1');
+ensureColumn('users', 'organization', 'organization TEXT');
 ensureColumn('user_message_status', 'is_deleted', 'is_deleted INTEGER NOT NULL DEFAULT 0');
 // event_id targets a broadcast at one event's members (NULL = everyone).
 ensureColumn('broadcast_messages', 'event_id', 'event_id INTEGER REFERENCES events(id) ON DELETE CASCADE');
+ensureColumn('events', 'event_date', 'event_date TEXT');
+ensureColumn('events', 'location', 'location TEXT');
 
 export type Role = 'admin' | 'user';

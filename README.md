@@ -32,13 +32,14 @@ the same package.
 - Extras: filter (All / Emergency / General), mark-as-read, mark-all-read, admin delete of any broadcast.
 
 **Events (QR join)**
-- Admins create an event in-app; the app generates a unique **QR code** for it (shown full-screen to print/display).
-- Users **scan the QR** (camera) — or type the code — to **join** an event.
-- Joining an event is what unlocks its notifications: every broadcast is **targeted at one event**, so only that event's members receive it.
+- Admins create an event in-app with a **name, date, location, and description**; the app generates a unique **QR code** for it (shown full-screen to print/display).
+- Users **scan the QR** (camera) — or type the code — to **sign up as an attendee** of that event.
+- Joining an event is what unlocks its notifications: every broadcast is **targeted at one event**, so only that event's attendees receive it.
 
 **Foundation**
 - Secure JWT auth (passwords hashed with bcrypt; token stored in the device keychain via `expo-secure-store`).
 - Role-based access (admin vs guest); admin-only broadcast tab and endpoints.
+- **Register as admin**: the sign-up screen has a Guest/Admin toggle. Choosing **Admin** asks for the **venue / business / property** the admin represents — that's all that's needed to create an admin account.
 - A basic **Concierge / Security request** flow (raise a request, see its status) — scaffolding for the next phase (realtime chat).
 
 ## Prerequisites

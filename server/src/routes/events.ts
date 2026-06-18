@@ -82,6 +82,8 @@ eventsRouter.get(
 
 const createSchema = z.object({
   name: z.string().trim().min(1).max(120),
+  eventDate: z.string().trim().max(120).optional(),
+  location: z.string().trim().max(200).optional(),
   description: z.string().trim().max(1000).optional(),
 });
 
@@ -98,8 +100,18 @@ eventsRouter.post(
       const code = generateCode();
       try {
         const info = db
-          .prepare('INSERT INTO events (name, code, description, created_by) VALUES (?, ?, ?, ?)')
-          .run(data.name, code, data.description ?? null, req.user!.id);
+          .prepare(
+            `INSERT INTO events (name, code, event_date, location, description, created_by)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+          )
+          .run(
+            data.name,
+            code,
+            data.eventDate ?? null,
+            data.location ?? null,
+            data.description ?? null,
+            req.user!.id,
+          );
         row = db.prepare('SELECT * FROM events WHERE id = ?').get(info.lastInsertRowid);
         break;
       } catch (err: any) {
