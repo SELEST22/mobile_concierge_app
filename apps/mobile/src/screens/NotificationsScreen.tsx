@@ -8,11 +8,11 @@
  *   irreversible-action warning).
  * - Filter chips switch between All / Emergency / General.
  */
-import type { BroadcastType, UserMessage } from '@concierge/shared';
-import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useRef, useState } from 'react';
+import type { BroadcastType, UserMessage } from '../lib/types';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { MessageCard } from '../components/MessageCard';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { confirmDelete } from '../lib/confirmDelete';
 import { colors, radius, spacing } from '../theme';
@@ -20,12 +20,13 @@ import { colors, radius, spacing } from '../theme';
 type Filter = 'all' | BroadcastType;
 
 export function NotificationsScreen() {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<UserMessage[]>([]);
   const [filter, setFilter] = useState<Filter>('all');
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   // Remember which emergencies we've already popped so we don't nag on refresh.
-  const alertedIds = useRef<Set<number>>(new Set());
+  const alertedIds = useRef<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     try {
@@ -40,7 +41,7 @@ export function NotificationsScreen() {
     }
   }, []);
 
-  function popEmergencies(data: UserMessage[]) {
+  const popEmergencies = useCallback((data: UserMessage[]) => {
     const fresh = data.find((m) => m.type === 'emergency' && !m.read_at && !alertedIds.current.has(m.id));
     if (fresh) {
       alertedIds.current.add(fresh.id);
@@ -49,16 +50,30 @@ export function NotificationsScreen() {
         { text: 'Mark as read', onPress: () => onMarkRead(fresh.id) },
       ]);
     }
-  }
+  }, []);
 
-  // Refetch every time the tab gains focus (lightweight polling alternative).
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load]),
-  );
+  // Live subscription to the connected event's broadcasts. New (and emergency)
+  // messages arrive in real time — the same Firestore stream the web app uses.
+  useEffect(() => {
+    if (!user?.connectedEventId) {
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const unsub = api.subscribeMyMessages(
+      user.connectedEventId,
+      (data) => {
+        setMessages(data);
+        popEmergencies(data);
+        setLoading(false);
+      },
+      () => setLoading(false),
+    );
+    return unsub;
+  }, [user?.connectedEventId, popEmergencies]);
 
-  async function onMarkRead(id: number) {
+  async function onMarkRead(id: string) {
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read_at: new Date().toISOString() } : m)));
     try {
       await api.markRead(id);
@@ -67,7 +82,7 @@ export function NotificationsScreen() {
     }
   }
 
-  async function onArchive(id: number) {
+  async function onArchive(id: string) {
     setMessages((prev) => prev.filter((m) => m.id !== id));
     try {
       await api.archiveMessage(id);
@@ -76,7 +91,7 @@ export function NotificationsScreen() {
     }
   }
 
-  function onDelete(id: number) {
+  function onDelete(id: string) {
     confirmDelete(async () => {
       setMessages((prev) => prev.filter((m) => m.id !== id));
       try {

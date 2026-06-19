@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
   wrap: { marginBottom: spacing(2) },
   label: { fontSize: 13, fontWeight: '600', color: colors.text, marginBottom: 6 },
   input: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.inputBg,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,

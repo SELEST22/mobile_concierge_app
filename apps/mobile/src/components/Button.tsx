@@ -7,7 +7,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { colors, radius, spacing } from '../theme';
+import { colors, fonts, radius, spacing } from '../theme';
 
 interface Props {
   title: string;
@@ -22,7 +22,9 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled,
   const isDisabled = disabled || loading;
   const bg =
     variant === 'primary' ? colors.primary : variant === 'danger' ? colors.emergency : 'transparent';
-  const textColor = variant === 'ghost' ? colors.primary : colors.white;
+  // Web app: gold buttons use black text; red (danger) uses white; ghost uses gold.
+  const textColor =
+    variant === 'ghost' ? colors.primary : variant === 'primary' ? colors.onPrimary : colors.white;
 
   return (
     <Pressable
@@ -55,5 +57,5 @@ const styles = StyleSheet.create({
   },
   ghost: { borderWidth: 1, borderColor: colors.primary },
   dim: { opacity: 0.6 },
-  text: { fontSize: 16, fontWeight: '600' },
+  text: { fontSize: 16, fontWeight: '600', fontFamily: fonts.semibold },
 });

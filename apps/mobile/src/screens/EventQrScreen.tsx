@@ -33,7 +33,7 @@ export function EventQrScreen({ route }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, alignItems: 'center', padding: spacing(3) },
-  name: { fontSize: 24, fontWeight: '800', color: colors.navy, marginTop: spacing(2), textAlign: 'center' },
+  name: { fontSize: 24, fontWeight: '800', color: colors.text, marginTop: spacing(2), textAlign: 'center' },
   meta: { fontSize: 15, color: colors.text, marginTop: 4, textAlign: 'center' },
   description: { fontSize: 14, color: colors.textMuted, marginTop: spacing(1), textAlign: 'center' },
   hint: { fontSize: 14, color: colors.textMuted, marginTop: spacing(2), marginBottom: spacing(3), textAlign: 'center' },

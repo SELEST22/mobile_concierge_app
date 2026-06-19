@@ -4,7 +4,7 @@
  * Lets a guest raise a request and see the status of their previous ones.
  * Next pass: realtime chat, QR-linked location, admin handling queue.
  */
-import type { ConciergeCategory, ConciergeRequest } from '@concierge/shared';
+import type { ConciergeCategory, ConciergeRequest } from '../lib/types';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import {
@@ -127,7 +127,7 @@ function statusStyle(status: ConciergeRequest['status']) {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing(2) },
-  section: { fontSize: 18, fontWeight: '800', color: colors.navy, marginBottom: spacing(1.5) },
+  section: { fontSize: 18, fontWeight: '800', color: colors.text, marginBottom: spacing(1.5) },
   cats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing(1), marginBottom: spacing(2) },
   cat: {
     paddingHorizontal: spacing(1.5),

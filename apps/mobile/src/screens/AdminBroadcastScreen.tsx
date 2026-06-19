@@ -5,7 +5,7 @@
  * Emergency vs General is chosen with a clear, color-coded toggle (emergency =
  * red / high priority).
  */
-import type { BroadcastMessage, BroadcastType, Event } from '@concierge/shared';
+import type { BroadcastMessage, BroadcastType, Event } from '../lib/types';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import {
@@ -29,7 +29,7 @@ export function AdminBroadcastScreen() {
   const [message, setMessage] = useState('');
   const [type, setType] = useState<BroadcastType>('general');
   // null = send to everyone; otherwise target one event's members.
-  const [targetEventId, setTargetEventId] = useState<number | null>(null);
+  const [targetEventId, setTargetEventId] = useState<string | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState<BroadcastMessage[]>([]);
@@ -93,7 +93,7 @@ export function AdminBroadcastScreen() {
     }
   }
 
-  function onDelete(id: number) {
+  function onDelete(id: string) {
     confirmDelete(async () => {
       try {
         await api.deleteBroadcast(id);
@@ -214,7 +214,7 @@ function TypeButton({
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing(2) },
-  section: { fontSize: 18, fontWeight: '800', color: colors.navy, marginBottom: spacing(1.5) },
+  section: { fontSize: 18, fontWeight: '800', color: colors.text, marginBottom: spacing(1.5) },
   typeRow: { flexDirection: 'row', gap: spacing(1.5), marginBottom: spacing(2) },
   typeBtn: { flex: 1, paddingVertical: spacing(1.5), borderRadius: radius.md, borderWidth: 1.5, alignItems: 'center' },
   typeBtnText: { fontWeight: '700', fontSize: 15 },

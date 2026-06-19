@@ -9,7 +9,7 @@ export function QrCode({ value, size = 220 }: { value: string; size?: number }) 
       value={value}
       size={size}
       backgroundColor="#FFFFFF"
-      color={palette.deepSpaceBlue}
+      color={palette.blackRussian}
     />
   );
 }

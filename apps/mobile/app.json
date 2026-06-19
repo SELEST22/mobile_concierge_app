@@ -9,7 +9,7 @@
     "newArchEnabled": true,
     "splash": {
       "resizeMode": "contain",
-      "backgroundColor": "#012A4A"
+      "backgroundColor": "#0A001C"
     },
     "ios": {
       "supportsTablet": true,
@@ -18,7 +18,7 @@
     "android": {
       "package": "com.selest.concierge",
       "adaptiveIcon": {
-        "backgroundColor": "#012A4A"
+        "backgroundColor": "#0A001C"
       }
     },
     "web": {

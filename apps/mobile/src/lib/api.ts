@@ -1,5 +1,8 @@
-/** A single shared ApiClient instance, pointed at the resolved backend URL. */
-import { ApiClient } from '@concierge/shared';
-import { API_URL } from '../config';
-
-export const api = new ApiClient(API_URL);
+/**
+ * The app's data client. Backed by Firebase/Firestore (shared with the web app)
+ * so both platforms read and write the same records in real time.
+ *
+ * Kept at this path so screens keep importing `{ api } from '../lib/api'`.
+ */
+export { api } from './firestore';
+export type { Api } from './firestore';

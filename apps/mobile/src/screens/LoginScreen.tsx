@@ -78,7 +78,7 @@ export function LoginScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing(3), paddingTop: spacing(8) },
-  brand: { fontSize: 30, fontWeight: '800', color: colors.navy },
+  brand: { fontSize: 32, fontWeight: '800', color: colors.primary, letterSpacing: 0.5 },
   tagline: { fontSize: 16, fontWeight: '600', color: colors.accent, marginTop: 2 },
   subtitle: { fontSize: 15, color: colors.textMuted, marginTop: 6, marginBottom: spacing(3) },
   error: { color: colors.emergency, marginBottom: spacing(1.5), fontWeight: '600' },

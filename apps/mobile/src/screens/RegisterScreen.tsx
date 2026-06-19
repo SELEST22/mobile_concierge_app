@@ -137,7 +137,7 @@ export function RegisterScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing(3), paddingTop: spacing(6) },
-  title: { fontSize: 26, fontWeight: '800', color: colors.navy, marginBottom: spacing(3) },
+  title: { fontSize: 26, fontWeight: '800', color: colors.text, marginBottom: spacing(3) },
   fieldLabel: { fontSize: 13, fontWeight: '600', color: colors.text, marginBottom: 6 },
   typeRow: { flexDirection: 'row', gap: spacing(1.5), marginBottom: spacing(2) },
   typeBtn: {

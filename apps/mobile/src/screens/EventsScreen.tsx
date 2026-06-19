@@ -8,7 +8,7 @@
  *   counts and a button to show each event's QR for people to scan.
  */
 import { Ionicons } from '@expo/vector-icons';
-import type { Event } from '@concierge/shared';
+import type { Event } from '../lib/types';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useState } from 'react';
@@ -145,7 +145,7 @@ export function EventsScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing(2) },
-  section: { fontSize: 18, fontWeight: '800', color: colors.navy, marginTop: spacing(3), marginBottom: spacing(1.5) },
+  section: { fontSize: 18, fontWeight: '800', color: colors.text, marginTop: spacing(3), marginBottom: spacing(1.5) },
   muted: { color: colors.textMuted, fontSize: 13 },
   metaLine: { color: colors.text, fontSize: 13, marginTop: 2 },
   multiline: { minHeight: 80, textAlignVertical: 'top' },

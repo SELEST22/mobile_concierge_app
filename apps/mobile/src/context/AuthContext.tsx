@@ -1,13 +1,21 @@
 /**
- * Auth state for the whole app: the current user + token, persisted securely.
+ * Auth state for the whole app: the current user, backed by Firebase Auth.
  *
- * On launch we restore the token from secure storage and verify it with the
- * backend (`/auth/me`) before deciding which navigator to show.
+ * Sessions persist via AsyncStorage (configured in `../firebase`), so we just
+ * subscribe to `onAuthStateChanged` and load the matching `users/{uid}`
+ * Firestore profile — the same user record the web app uses.
  */
-import type { LoginPayload, RegisterPayload, User } from '@concierge/shared';
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
+} from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { api } from '../lib/api';
-import { clearToken, loadToken, saveToken } from '../lib/storage';
+import { auth } from '../firebase';
+import { createUserProfile, readUserProfile } from '../lib/firestore';
+import type { LoginPayload, RegisterPayload, User } from '../lib/types';
 
 interface AuthContextValue {
   user: User | null;
@@ -16,38 +24,48 @@ interface AuthContextValue {
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+function friendlyAuthError(e: unknown): string {
+  const code = (e as { code?: string })?.code ?? '';
+  switch (code) {
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+      return 'Incorrect email or password.';
+    case 'auth/email-already-in-use':
+      return 'An account with that email already exists.';
+    case 'auth/weak-password':
+      return 'Password must be at least 6 characters.';
+    case 'auth/invalid-email':
+      return 'That email address looks invalid.';
+    case 'auth/network-request-failed':
+      return 'Network error. Check your connection and try again.';
+    default:
+      return e instanceof Error ? e.message : 'Something went wrong.';
+  }
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore a saved session on first launch.
+  // Restore / track the Firebase session.
   useEffect(() => {
-    (async () => {
+    const unsub = onAuthStateChanged(auth, async (fbUser) => {
       try {
-        const token = await loadToken();
-        if (token) {
-          api.setToken(token);
-          setUser(await api.me());
-        }
+        setUser(fbUser ? await readUserProfile(fbUser.uid) : null);
       } catch {
-        // Token invalid/expired — start signed out.
-        await clearToken();
-        api.setToken(null);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
-    })();
+    });
+    return unsub;
   }, []);
-
-  async function persistSession(token: string, nextUser: User) {
-    api.setToken(token);
-    await saveToken(token);
-    setUser(nextUser);
-  }
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -55,17 +73,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       isAdmin: user?.role === 'admin',
       async login(payload) {
-        const { token, user: u } = await api.login(payload);
-        await persistSession(token, u);
+        try {
+          const cred = await signInWithEmailAndPassword(auth, payload.email, payload.password);
+          setUser(await readUserProfile(cred.user.uid));
+        } catch (e) {
+          throw new Error(friendlyAuthError(e));
+        }
       },
       async register(payload) {
-        const { token, user: u } = await api.register(payload);
-        await persistSession(token, u);
+        try {
+          const cred = await createUserWithEmailAndPassword(auth, payload.email, payload.password);
+          await updateProfile(cred.user, { displayName: payload.name });
+          await createUserProfile(cred.user.uid, {
+            email: payload.email,
+            name: payload.name,
+            role: payload.role ?? 'user',
+            organization: payload.organization,
+            notificationsConsent: payload.notificationsConsent,
+          });
+          setUser(await readUserProfile(cred.user.uid));
+        } catch (e) {
+          throw new Error(friendlyAuthError(e));
+        }
       },
       async logout() {
-        await clearToken();
-        api.setToken(null);
+        await signOut(auth);
         setUser(null);
+      },
+      async refresh() {
+        if (auth.currentUser) setUser(await readUserProfile(auth.currentUser.uid));
       },
     }),
     [user, isLoading],

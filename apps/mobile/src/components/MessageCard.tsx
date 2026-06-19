@@ -7,7 +7,7 @@
  * destructive delete confirmation lives in the parent screen.
  */
 import { Ionicons } from '@expo/vector-icons';
-import type { UserMessage } from '@concierge/shared';
+import type { UserMessage } from '../lib/types';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../theme';

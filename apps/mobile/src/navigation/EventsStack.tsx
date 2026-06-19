@@ -1,4 +1,4 @@
-import type { Event } from '@concierge/shared';
+import type { Event } from '../lib/types';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { EventQrScreen } from '../screens/EventQrScreen';

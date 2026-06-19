@@ -4,7 +4,7 @@
  * Archived messages never expire — they stay here until the user deletes them.
  * Deleting shows the irreversible-action warning.
  */
-import type { UserMessage } from '@concierge/shared';
+import type { UserMessage } from '../lib/types';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import { Alert, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
@@ -35,7 +35,7 @@ export function ArchivedScreen() {
     }, [load]),
   );
 
-  function onDelete(id: number) {
+  function onDelete(id: string) {
     confirmDelete(async () => {
       setMessages((prev) => prev.filter((m) => m.id !== id));
       try {
