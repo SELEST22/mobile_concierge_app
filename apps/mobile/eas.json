@@ -1,0 +1,41 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": { "buildType": "apk" },
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDrTjjqAV-tE6e0X1RtmtgvlVT7Dd8zQGY",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "selest-security.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "selest-security",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "selest-security.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "341467558479",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:341467558479:web:4502a986f0e1ec5a03f03a",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-DUMMY00000"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": { "buildType": "app-bundle" },
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDrTjjqAV-tE6e0X1RtmtgvlVT7Dd8zQGY",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "selest-security.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "selest-security",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "selest-security.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "341467558479",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:341467558479:web:4502a986f0e1ec5a03f03a",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-DUMMY00000"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
