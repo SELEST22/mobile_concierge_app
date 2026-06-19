@@ -19,7 +19,11 @@
       "package": "com.selest.concierge",
       "adaptiveIcon": {
         "backgroundColor": "#0A001C"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro"
@@ -31,6 +35,12 @@
           "cameraPermission": "Allow Selest Security to use the camera to scan event QR codes."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "48eae466-efcf-496e-8b75-071a458153d9"
+      }
+    },
+    "owner": "selest-security"
   }
 }
