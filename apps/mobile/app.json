@@ -1,7 +1,6 @@
 {
   "expo": {
     "name": "Selest Security - Mobile Concierge Service",
-    "icon": "./icon.png",
     "slug": "mobile-concierge",
     "version": "0.1.0",
     "orientation": "portrait",
@@ -19,7 +18,6 @@
     "android": {
       "package": "com.selest.concierge",
       "adaptiveIcon": {
-        "foregroundImage": "./adaptive_icon.png",
         "backgroundColor": "#0A001C"
       },
       "permissions": [
