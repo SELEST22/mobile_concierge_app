@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "54a265e2-6b10-4c7c-82a5-065e349ca144"
+      }
+    },
+    "android": {
+      "package": "com.prisha.l.mobileconcierge"
+    }
+  }
+}
